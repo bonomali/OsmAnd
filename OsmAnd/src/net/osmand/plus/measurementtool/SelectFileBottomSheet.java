@@ -48,12 +48,12 @@ public class SelectFileBottomSheet extends BottomSheetBehaviourDialogFragment {
 	private HorizontalSelectionAdapter folderAdapter;
 	private GPXInfo currentlyRecording;
 
-	enum Mode {
+	public enum Mode {
 		OPEN_TRACK(R.string.shared_string_gpx_tracks, R.string.sort_by),
 		ADD_TO_TRACK(R.string.add_to_a_track, R.string.route_between_points_add_track_desc);
 
+		public int description;
 		int title;
-		int description;
 
 		Mode(@StringRes int title, @StringRes int description) {
 			this.title = title;
@@ -327,7 +327,7 @@ public class SelectFileBottomSheet extends BottomSheetBehaviourDialogFragment {
 		}
 	}
 
-	interface SelectFileListener {
+	public interface SelectFileListener {
 
 		void selectFileOnCLick(String fileName);
 
