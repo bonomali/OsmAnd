@@ -23,10 +23,12 @@ import androidx.fragment.app.FragmentManager;
 
 import net.osmand.AndroidUtils;
 import net.osmand.CallbackWithObject;
+import net.osmand.Collator;
 import net.osmand.GPXUtilities.GPXFile;
 import net.osmand.GPXUtilities.TrkSegment;
 import net.osmand.GPXUtilities.WptPt;
 import net.osmand.IndexConstants;
+import net.osmand.OsmAndCollator;
 import net.osmand.PlatformUtil;
 import net.osmand.ValueHolder;
 import net.osmand.data.QuadRect;
@@ -40,11 +42,13 @@ import net.osmand.plus.UiUtilities.DialogButtonType;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.base.ContextMenuScrollFragment;
 import net.osmand.plus.helpers.AndroidUiHelper;
+import net.osmand.plus.helpers.GpxTrackAdapter;
 import net.osmand.plus.helpers.GpxUiHelper;
 import net.osmand.plus.helpers.GpxUiHelper.GPXInfo;
 import net.osmand.plus.helpers.enums.TracksSortByMode;
 import net.osmand.plus.importfiles.ImportHelper;
 import net.osmand.plus.importfiles.ImportHelper.OnGpxImportCompleteListener;
+import net.osmand.plus.mapcontextmenu.other.HorizontalSelectionAdapter;
 import net.osmand.plus.measurementtool.GpxData;
 import net.osmand.plus.measurementtool.GpxData.ActionType;
 import net.osmand.plus.measurementtool.MeasurementEditingContext;
@@ -72,13 +76,26 @@ import org.apache.commons.logging.Log;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+
+import static net.osmand.plus.helpers.GpxUiHelper.getSortedGPXFilesInfo;
 
 
 public class FollowTrackFragment extends ContextMenuScrollFragment implements CardListener,
 		IRouteInformationListener, MapControlsLayer.MapControlsThemeInfoProvider {
 
 	public static final String TAG = FollowTrackFragment.class.getName();
+	private HorizontalSelectionAdapter folderAdapter;
+
+	private Map<String, List<GPXInfo>> gpxInfoMap;
+	private List<File> folders;
+	private String selectedFolder;
+	private String allFilesFolder;
+	protected GpxTrackAdapter adapter;
+
 
 	private static final Log log = PlatformUtil.getLog(FollowTrackFragment.class);
 
@@ -150,7 +167,64 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 		}
 	}
 
+	private void sortFolderList() {
+		final Collator collator = OsmAndCollator.primaryCollator();
+		Collections.sort(folders, new Comparator<File>() {
+			@Override
+			public int compare(File i1, File i2) {
+				if (sortByMode == TracksSortByMode.BY_NAME_ASCENDING) {
+					return collator.compare(i1.getName(), i2.getName());
+				} else if (sortByMode == TracksSortByMode.BY_NAME_DESCENDING) {
+					return -collator.compare(i1.getName(), i2.getName());
+				} else {
+					long time1 = i1.lastModified();
+					long time2 = i2.lastModified();
+					if (time1 == time2) {
+						return collator.compare(i1.getName(), i2.getName());
+					}
+					return -((time1 < time2) ? -1 : ((time1 == time2) ? 0 : 1));
+				}
+			}
+		});
+	}
 
+	private void sortFileList() {
+		List<GPXInfo> gpxInfoList = gpxInfoMap.get(selectedFolder);
+		if (gpxInfoList != null) {
+			sortSelected(gpxInfoList);
+		}
+		adapter.setGpxInfoList(gpxInfoList != null ? gpxInfoList : new ArrayList<GPXInfo>());
+	}
+	
+		public void sortSelected(List<GPXInfo> gpxInfoList) {
+			final Collator collator = OsmAndCollator.primaryCollator();
+			Collections.sort(gpxInfoList, new Comparator<GPXInfo>() {
+				@Override
+				public int compare(GPXInfo i1, GPXInfo i2) {
+					if (sortByMode == TracksSortByMode.BY_NAME_ASCENDING) {
+						return collator.compare(i1.getFileName(), i2.getFileName());
+					} else if (sortByMode == TracksSortByMode.BY_NAME_DESCENDING) {
+						return -collator.compare(i1.getFileName(), i2.getFileName());
+					} else {
+						long time1 = i1.getLastModified();
+						long time2 = i2.getLastModified();
+						if (time1 == time2) {
+							return collator.compare(i1.getFileName(), i2.getFileName());
+						}
+						return -((time1 < time2) ? -1 : ((time1 == time2) ? 0 : 1));
+					}
+				}
+			});
+		}
+
+	private List<String> getFolderNames() {
+		List<String> folderNames = new ArrayList<>();
+		folderNames.add(allFilesFolder);
+		for (File folder : folders) {
+			folderNames.add(folder.getName());
+		}
+		return folderNames;
+	}
 
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -174,15 +248,14 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 								app.getUIUtilities().getThemedIcon(mode.getIconId()),
 								new View.OnClickListener() {
 									@Override
-									public void onClick(View v) {
+									public void onClick(View view) {
 										sortByMode = mode;
 										sortButton.setImageResource(mode.getIconId());
-//										updateDescription(descriptionView);
-//										sortFolderList();
-//										folderAdapter.setTitledItems(getFolderNames());
-//										folderAdapter.notifyDataSetChanged();
-//										sortFileList();
-//										adapter.notifyDataSetChanged();
+										sortFolderList();
+										folderAdapter.setTitledItems(getFolderNames());
+										folderAdapter.notifyDataSetChanged();
+										sortFileList();
+										adapter.notifyDataSetChanged();
 									}
 								}, sortByMode == mode
 						));
