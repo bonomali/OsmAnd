@@ -387,6 +387,7 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 		}
 	}
 
+	
 	private void setupNavigateOptionsCard(GPXRouteParamsBuilder rparams) {
 		MapActivity mapActivity = getMapActivity();
 		if (mapActivity != null) {
