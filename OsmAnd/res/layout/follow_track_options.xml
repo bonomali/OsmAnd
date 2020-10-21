@@ -94,6 +94,14 @@
 					android:orientation="vertical"
 					android:paddingBottom="@dimen/dialog_button_ex_height">
 
+					<androidx.recyclerview.widget.RecyclerView
+						android:id="@+id/gpx_track_list"
+						android:layout_width="match_parent"
+						android:layout_height="0dp"
+						android:layout_weight="1"
+						tools:itemCount="1"
+						tools:listitem="@layout/gpx_track_select_item" />
+
 				</LinearLayout>
 
 			</androidx.core.widget.NestedScrollView>
