@@ -122,7 +122,7 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 	private boolean editingTrack;
 	private boolean selectingTrack;
 	private int menuTitleHeight;
-	private Map<String, List<GPXInfo>> gpxInfoMap;
+	private Map<String, List <GPXInfo>> gpxInfoMap;
 	private String selectedFolder;
 	private GPXInfo currentlyRecording;
 	protected GpxTrackAdapter adapter;
@@ -251,6 +251,16 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 			}
 			filesRecyclerView.setAdapter(adapter);
 			gpxInfoMap = new HashMap<>();
+			gpxInfoMap.put(allFilesFolder, allGpxList);
+			for (GPXInfo gpxInfo : allGpxList) {
+				String folderName = getFolderName(gpxInfo);
+				List<GPXInfo> gpxList = gpxInfoMap.get(folderName);
+				if (gpxList == null) {
+					gpxList = new ArrayList<>();
+					gpxInfoMap.put(folderName, gpxList);
+				}
+				gpxList.add(gpxInfo);
+			}
 			ImageButton closeButton = view.findViewById(R.id.close_button);
 			closeButton.setImageDrawable(getContentIcon(AndroidUtils.getNavigationIconResId(app)));
 			closeButton.setOnClickListener(new View.OnClickListener() {
@@ -276,6 +286,13 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 			runLayoutListener();
 		}
 		return view;
+	}
+
+	private String getFolderName(GPXInfo gpxInfo) {
+		int fileNameStartIndex = gpxInfo.getFileName().lastIndexOf(File.separator);
+		return fileNameStartIndex != -1
+				? gpxInfo.getFileName().substring(0, fileNameStartIndex)
+				: IndexConstants.GPX_INDEX_DIR.substring(0, IndexConstants.GPX_INDEX_DIR.length() - 1);
 	}
 
 	public void sortSelected(List<GPXInfo> gpxInfoList) {
