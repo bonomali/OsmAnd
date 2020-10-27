@@ -185,14 +185,14 @@ public class FollowTrackFragment extends ContextMenuScrollFragment implements Ca
 		buttonsShadow.setVisibility(View.VISIBLE);
 		buttonsShadow.animate()
 				.alpha(0.8f)
-				.setDuration(200)
+				.setDuration(100)
 				.setListener(null);
 	}
 
 	private void hideShadowButton() {
 		buttonsShadow.animate()
 				.alpha(0f)
-				.setDuration(200);
+				.setDuration(100);
 
 	}
 
