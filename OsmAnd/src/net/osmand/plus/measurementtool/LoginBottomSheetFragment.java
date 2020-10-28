@@ -1,23 +1,20 @@
 package net.osmand.plus.measurementtool;
 
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
-import net.osmand.plus.UiUtilities;
 import net.osmand.plus.UiUtilities.DialogButtonType;
 import net.osmand.plus.base.MenuBottomSheetDialogFragment;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.DividerSpaceItem;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.ShortDescriptionItem;
-import net.osmand.plus.helpers.AndroidUiHelper;
 import net.osmand.plus.osmedit.oauth.OsmOAuthAuthorizationAdapter;
 import net.osmand.plus.settings.backend.ApplicationMode;
 import net.osmand.plus.settings.bottomsheets.OsmLoginDataBottomSheet;
@@ -25,6 +22,7 @@ import net.osmand.plus.settings.bottomsheets.OsmLoginDataBottomSheet;
 public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
 
     private ApplicationMode appMode;
+    private OsmOAuthAuthorizationAdapter client;
     private static final String OSM_LOGIN_DATA = "osm_login_data";
 
     public static final String TAG = ExitBottomSheetDialogFragment.class.getSimpleName();
@@ -42,7 +40,7 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
                 getResources().getDimensionPixelSize(R.dimen.bottom_sheet_exit_button_margin)));
 
     }
-
+    
     @Override
     protected int getDismissButtonTextId() {
         return R.string.shared_string_cancel;
@@ -86,7 +84,7 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
     @Override
     protected void onThirdBottomButtonClick() {
         View view = getView();
-        OsmOAuthAuthorizationAdapter client = new OsmOAuthAuthorizationAdapter(getMyApplication());
+        client = new OsmOAuthAuthorizationAdapter(getMyApplication());
         if (view != null) {
             ViewGroup appBarLayout = view.findViewById(R.id.appbar);
             client.startOAuth(appBarLayout);

@@ -141,12 +141,6 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 
 				screen.addPreference(prefOAuth);
 				screen.addPreference(prefClearToken);
-			} else {
-				Preference prefOAuth = new Preference(ctx);
-				prefOAuth.setTitle(R.string.perform_oauth_authorization);
-				prefOAuth.setSummary(R.string.perform_oauth_authorization_description);
-				prefOAuth.setKey(OSM_OAUTH_LOGIN);
-				screen.addPreference(prefOAuth);
 			}
 		}
 	}
