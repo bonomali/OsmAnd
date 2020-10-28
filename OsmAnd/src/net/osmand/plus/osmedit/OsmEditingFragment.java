@@ -21,6 +21,8 @@ import net.osmand.plus.R;
 import net.osmand.plus.activities.MapActivity;
 import net.osmand.plus.helpers.AndroidUiHelper;
 import net.osmand.plus.helpers.FontCache;
+import net.osmand.plus.measurementtool.ExitBottomSheetDialogFragment;
+import net.osmand.plus.measurementtool.LoginBottomSheetFragment;
 import net.osmand.plus.osmedit.oauth.OsmOAuthAuthorizationAdapter;
 import net.osmand.plus.settings.backend.OsmAndAppCustomization;
 import net.osmand.plus.settings.bottomsheets.OsmLoginDataBottomSheet;
@@ -86,7 +88,7 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 	private void setupNameAndPasswordPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_DATA);
 		nameAndPasswordPref.setSummary(settings.USER_NAME.get());
-		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_openstreetmap_logo));
+		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
 	}
 
 	private void setupOfflineEditingPref() {
@@ -165,7 +167,7 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 		} else if (OSM_LOGIN_DATA.equals(prefId)) {
 			FragmentManager fragmentManager = getFragmentManager();
 			if (fragmentManager != null) {
-				OsmLoginDataBottomSheet.showInstance(fragmentManager, OSM_LOGIN_DATA, this, false, getSelectedAppMode());
+				LoginBottomSheetFragment.showInstance(fragmentManager, this);
 				return true;
 			}
 		} else if (OSM_OAUTH_CLEAR.equals(prefId)) {

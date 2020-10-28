@@ -16,8 +16,8 @@
 		android:key="osm_login_data"
 		android:layout="@layout/preference_with_descr"
 		android:persistent="false"
-		android:title="@string/login_and_pass"
-		tools:icon="@drawable/ic_action_openstreetmap_logo"
+		android:title="@string/login_open_street_map"
+		tools:icon="@drawable/ic_action_user"
 		tools:summary="@string/open_street_map_login_descr" />
 
 	<net.osmand.plus.settings.preferences.SwitchPreferenceEx
