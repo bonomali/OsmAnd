@@ -22,6 +22,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -43,6 +44,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.textfield.TextInputLayout;
 
 import net.osmand.AndroidUtils;
+import net.osmand.plus.GPXDatabase;
+import net.osmand.plus.GpxSelectionHelper;
 import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
 import net.osmand.plus.UiUtilities;
@@ -52,6 +55,7 @@ import net.osmand.plus.helpers.AndroidUiHelper;
 import net.osmand.plus.helpers.ColorDialogs;
 import net.osmand.plus.mapcontextmenu.MapContextMenu;
 import net.osmand.plus.mapcontextmenu.other.HorizontalSelectionAdapter;
+import net.osmand.plus.track.CustomColorBottomSheet;
 import net.osmand.plus.widgets.FlowLayout;
 import net.osmand.util.Algorithms;
 
@@ -71,8 +75,10 @@ import static net.osmand.data.FavouritePoint.DEFAULT_BACKGROUND_TYPE;
 import static net.osmand.data.FavouritePoint.DEFAULT_UI_ICON_ID;
 import static net.osmand.plus.FavouritesDbHelper.FavoriteGroup.PERSONAL_CATEGORY;
 import static net.osmand.plus.FavouritesDbHelper.FavoriteGroup.isPersonalCategoryDisplayName;
+import static net.osmand.plus.views.layers.POIMapLayer.log;
+import net.osmand.plus.track.CustomColorBottomSheet.ColorPickerListener;
 
-public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
+public abstract class PointEditorFragmentNew extends BaseOsmAndFragment implements ColorPickerListener {
 
 	public static final String TAG = PointEditorFragmentNew.class.getSimpleName();
 
@@ -101,6 +107,8 @@ public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
 	private EditText descriptionEdit;
 	private EditText addressEdit;
 	private int layoutHeightPrevious = 0;
+	public static final int INVALID_VALUE = -1;
+	List<Integer> customColors;
 
 	@Override
 	public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -457,18 +465,8 @@ public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
 		setSelectedItemWithScroll(getCategoryInitValue());
 	}
 
-	private void createColorSelector() {
-		FlowLayout selectColor = view.findViewById(R.id.select_color);
-		for (int color : ColorDialogs.pallette) {
-			selectColor.addView(createColorItemView(color, selectColor), new FlowLayout.LayoutParams(0, 0));
-		}
-		int customColor = getPointColor();
-		if (!ColorDialogs.isPaletteColor(customColor)) {
-			selectColor.addView(createColorItemView(customColor, selectColor), new FlowLayout.LayoutParams(0, 0));
-		}
-	}
 
-	private View createColorItemView(@ColorInt final int color, final FlowLayout rootView) {
+	private View createColorItemView(@ColorInt final int color, final FlowLayout rootView, boolean customColor) {
 		FrameLayout colorItemView = (FrameLayout) UiUtilities.getInflater(getContext(), nightMode)
 				.inflate(R.layout.point_editor_button, rootView, false);
 		ImageView outline = colorItemView.findViewById(R.id.outline);
@@ -477,8 +475,12 @@ public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
 						ContextCompat.getColor(app,
 								nightMode ? R.color.stroked_buttons_and_links_outline_dark
 										: R.color.stroked_buttons_and_links_outline_light)));
+		Drawable transparencyIcon = getTransparencyIcon(app, color);
+		Drawable colorIcon = app.getUIUtilities().getPaintedIcon(R.drawable.bg_point_circle, color);
+		Drawable layeredIcon = UiUtilities.getLayeredIcon(transparencyIcon, colorIcon);
 		ImageView backgroundCircle = colorItemView.findViewById(R.id.background);
 		backgroundCircle.setImageDrawable(UiUtilities.tintDrawable(AppCompatResources.getDrawable(app, R.drawable.bg_point_circle), color));
+		backgroundCircle.setImageDrawable(layeredIcon);
 		backgroundCircle.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -486,7 +488,123 @@ public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
 			}
 		});
 		colorItemView.setTag(color);
+		if (customColor) {
+			backgroundCircle.setOnLongClickListener(new View.OnLongClickListener() {
+				@Override
+				public boolean onLongClick(View v) {
+					MapActivity mapActivity = getMapActivity();
+					if (mapActivity != null) {
+						CustomColorBottomSheet.showInstance(mapActivity.getSupportFragmentManager(), PointEditorFragmentNew.this, color);
+					}
+					return false;
+				}
+			});
+		}
+		colorItemView.setTag(color);
 		return colorItemView;
+	}
+
+
+	private View createDividerView(FlowLayout rootView) {
+		LayoutInflater themedInflater = UiUtilities.getInflater(view.getContext(), nightMode);
+		View divider = themedInflater.inflate(R.layout.simple_divider_item, rootView, false);
+
+		LinearLayout dividerContainer = new LinearLayout(view.getContext());
+		dividerContainer.addView(divider);
+		dividerContainer.setPadding(0, AndroidUtils.dpToPx(app, 1), 0, AndroidUtils.dpToPx(app, 5));
+
+		return dividerContainer;
+	}
+
+	private List<Integer> getCustomColors() {
+		List<Integer> colors = new ArrayList<>();
+		List<String> colorNames = app.getSettings().CUSTOM_TRACK_COLORS.getStringsList();
+		if (colorNames != null) {
+			for (String colorHex : colorNames) {
+				try {
+					if (!Algorithms.isEmpty(colorHex)) {
+						int color = Algorithms.parseColor(colorHex);
+						colors.add(color);
+					}
+				} catch (IllegalArgumentException e) {
+					log.error(e);
+				}
+			}
+		}
+
+		return colors;
+	}
+
+	private void createColorSelector() {
+		FlowLayout selectColor = view.findViewById(R.id.select_color);
+		selectColor.removeAllViews();
+		customColors = getCustomColors();
+
+		for (int color : customColors) {
+			selectColor.addView(createColorItemView(color, selectColor, true), new FlowLayout.LayoutParams(0, 0));
+		}
+		if (customColors.size() < 6) {
+			selectColor.addView(createAddCustomColorItemView(selectColor), new FlowLayout.LayoutParams(0, 0));
+		}
+		selectColor.addView(createDividerView(selectColor));
+
+		for (int color : ColorDialogs.pallette) {
+			selectColor.addView(createColorItemView(color, selectColor,false), new FlowLayout.LayoutParams(0, 0));
+		}
+		int customColor = getPointColor();
+		if (!ColorDialogs.isPaletteColor(customColor)) {
+			selectColor.addView(createColorItemView(customColor, selectColor, false), new FlowLayout.LayoutParams(0, 0));
+		}
+	}
+
+	private Drawable getTransparencyIcon(OsmandApplication app, @ColorInt int color) {
+		int colorWithoutAlpha = UiUtilities.removeAlpha(color);
+		int transparencyColor = UiUtilities.getColorWithAlpha(colorWithoutAlpha, 0.8f);
+		return app.getUIUtilities().getPaintedIcon(R.drawable.ic_bg_transparency, transparencyColor);
+	}
+
+	private View createAddCustomColorItemView(FlowLayout rootView) {
+		View colorItemView = createCircleView(rootView);
+		ImageView backgroundCircle = colorItemView.findViewById(R.id.background);
+
+		int bgColorId = nightMode ? R.color.activity_background_color_dark : R.color.activity_background_color_light;
+		Drawable backgroundIcon = app.getUIUtilities().getIcon(R.drawable.bg_point_circle, bgColorId);
+
+		ImageView icon = colorItemView.findViewById(R.id.icon);
+		icon.setVisibility(View.VISIBLE);
+		int activeColorResId = nightMode ? R.color.icon_color_active_dark : R.color.icon_color_active_light;
+		icon.setImageDrawable(app.getUIUtilities().getIcon(R.drawable.ic_action_plus, activeColorResId));
+
+		backgroundCircle.setImageDrawable(backgroundIcon);
+		backgroundCircle.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				MapActivity mapActivity = getMapActivity();
+				if (mapActivity != null) {
+					CustomColorBottomSheet.showInstance(mapActivity.getSupportFragmentManager(), PointEditorFragmentNew.this, null);
+				}
+			}
+		});
+		return colorItemView;
+	}
+
+	private View createCircleView(ViewGroup rootView) {
+		LayoutInflater themedInflater = UiUtilities.getInflater(view.getContext(), nightMode);
+		View circleView = themedInflater.inflate(R.layout.point_editor_button, rootView, false);
+		ImageView outline = circleView.findViewById(R.id.outline);
+		int colorId = nightMode ? R.color.stroked_buttons_and_links_outline_dark : R.color.stroked_buttons_and_links_outline_light;
+		Drawable contourIcon = app.getUIUtilities().getIcon(R.drawable.bg_point_circle_contour, colorId);
+		outline.setImageDrawable(contourIcon);
+		return circleView;
+	}
+
+	private void saveCustomColors() {
+		List<String> colorNames = new ArrayList<>();
+		for (Integer color : customColors) {
+			String colorHex = Algorithms.colorToString(color);
+			colorNames.add(colorHex);
+		}
+		app.getSettings().CUSTOM_TRACK_COLORS.setStringsList(colorNames);
 	}
 
 	private void updateColorSelector(int color, View rootView) {
@@ -945,6 +1063,21 @@ public abstract class PointEditorFragmentNew extends BaseOsmAndFragment {
 		warningDialog.setMessage(getString(message));
 		warningDialog.setNegativeButton(negButton, null);
 		return warningDialog;
+	}
+
+	@Override
+	public void onColorSelected(Integer prevColor, int newColor) {
+		if (prevColor != null) {
+			int index = customColors.indexOf(prevColor);
+			if (index != INVALID_VALUE) {
+				customColors.set(index, newColor);
+			}
+			if (customColors.size() < 6) {
+				customColors.add(newColor);
+			}
+			saveCustomColors();
+			createColorSelector();
+		}
 	}
 
 	class GroupAdapter extends RecyclerView.Adapter<GroupsViewHolder> {
