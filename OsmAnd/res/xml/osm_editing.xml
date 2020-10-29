@@ -20,6 +20,14 @@
 		tools:icon="@drawable/ic_action_user"
 		tools:summary="@string/open_street_map_login_descr" />
 
+	<Preference
+		android:key="osm_login_exit"
+		android:layout="@layout/preference_with_descr"
+		android:persistent="false"
+		android:title="@string/shared_string_logoff"
+		tools:icon="@drawable/ic_action_user"
+		tools:summary="@string/open_street_map_login_descr" />
+
 	<net.osmand.plus.settings.preferences.SwitchPreferenceEx
 		android:key="offline_osm_editing"
 		android:layout="@layout/preference_with_descr_dialog_and_switch"
