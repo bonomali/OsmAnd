@@ -54,14 +54,6 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 		client = new OsmOAuthAuthorizationAdapter(app);
 	}
 
-	protected void onPostExecute(OsmBugsUtil.OsmBugResult osmBugResult) {
-		if (osmBugResult.warning != null) {
-			app.showToastMessage(osmBugResult.warning);
-		} else {
-			app.showToastMessage(R.string.favorite_category_name);
-		}
-	}
-
 	@Override
 	protected void setupPreferences() {
 		Preference osmEditingInfo = findPreference(OSM_EDITING_INFO);
@@ -91,15 +83,12 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 			TextView titleView = (TextView) holder.findViewById(android.R.id.title);
 			titleView.setTextSize(16);
 		}
-		if (OSM_EDITING_INFO.equals(preference.getKey())) {
-
-		}
 	}
 
 	private void setupNameAndPasswordPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_DATA);
 		nameAndPasswordPref.setTitle(R.string.sing_in_with_open_street_map);
-		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
+		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user_account));
 
 		boolean validToken = client.isValidToken();
 		boolean loginExists = !Algorithms.isEmpty(settings.USER_NAME.get()) && !Algorithms.isEmpty(settings.USER_PASSWORD.get());
@@ -110,7 +99,7 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 	private void setupExitPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_EXIT);
 		nameAndPasswordPref.setSummary(settings.USER_NAME.get());
-		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
+		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user_account));
 
 		boolean validToken = client.isValidToken();
 		boolean loginExists = !Algorithms.isEmpty(settings.USER_NAME.get()) && !Algorithms.isEmpty(settings.USER_PASSWORD.get());

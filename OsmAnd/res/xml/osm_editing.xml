@@ -16,15 +16,13 @@
 		android:key="osm_login_data"
 		android:layout="@layout/preference_with_descr"
 		android:persistent="false"
-		android:title="@string/login_open_street_map"
-		tools:icon="@drawable/ic_action_user" />
+		android:title="@string/login_open_street_map" />
 
 	<Preference
 		android:key="osm_login_exit"
 		android:layout="@layout/preference_login"
 		android:persistent="false"
-		android:title="@string/login_account"
-		tools:icon="@drawable/ic_action_user" />
+		android:title="@string/login_account" />
 
 	<net.osmand.plus.settings.preferences.SwitchPreferenceEx
 		android:key="offline_osm_editing"
