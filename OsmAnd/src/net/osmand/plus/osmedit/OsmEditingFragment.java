@@ -43,7 +43,6 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 	private static final String OPEN_OSM_EDITS = "open_osm_edits";
 	private static final String OSM_LOGIN_DATA = "osm_login_data";
 	private static final String OSM_LOGIN_EXIT = "osm_login_exit";
-	private static final String OSM_OAUTH_SUCCESS = "osm_oauth_success";
 	private static final String OSM_OAUTH_CLEAR = "osm_oauth_clear";
 	private static final String OSM_OAUTH_LOGIN = "osm_oauth_login";
 
@@ -74,7 +73,6 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 		setupOfflineEditingPref();
 		setupOsmEditsDescrPref();
 		setupOsmEditsPref();
-		setupOAuthPrefs();
 	}
 
 	@Override
@@ -93,26 +91,30 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 			TextView titleView = (TextView) holder.findViewById(android.R.id.title);
 			titleView.setTextSize(16);
 		}
+		if (OSM_EDITING_INFO.equals(preference.getKey())) {
+
+		}
 	}
 
 	private void setupNameAndPasswordPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_DATA);
-		nameAndPasswordPref.setSummary(settings.USER_NAME.get());
-		nameAndPasswordPref.setTitle(R.string.favorite_category_name);
+		nameAndPasswordPref.setTitle(R.string.sing_in_with_open_street_map);
 		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
 
-		boolean visible = !client.isValidToken()
-				|| Algorithms.isEmpty(settings.USER_NAME.get()) && Algorithms.isEmpty(settings.USER_PASSWORD.get());
+		boolean validToken = client.isValidToken();
+		boolean loginExists = !Algorithms.isEmpty(settings.USER_NAME.get()) && !Algorithms.isEmpty(settings.USER_PASSWORD.get());
+		boolean visible = !validToken && !loginExists;
 		nameAndPasswordPref.setVisible(visible);
 	}
 
 	private void setupExitPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_EXIT);
-		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
+		nameAndPasswordPref.setSummary(settings.USER_NAME.get());
 		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user));
 
-		boolean visible = client.isValidToken()
-				|| !Algorithms.isEmpty(settings.USER_NAME.get()) && !Algorithms.isEmpty(settings.USER_PASSWORD.get());
+		boolean validToken = client.isValidToken();
+		boolean loginExists = !Algorithms.isEmpty(settings.USER_NAME.get()) && !Algorithms.isEmpty(settings.USER_PASSWORD.get());
+		boolean visible = validToken || loginExists;
 		nameAndPasswordPref.setVisible(visible);
 	}
 
@@ -149,33 +151,6 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 		createProfile.setIcon(getActiveIcon(R.drawable.ic_action_folder));
 	}
 
-	private void setupOAuthPrefs() {
-		Context ctx = getContext();
-		if (ctx != null) {
-			PreferenceScreen screen = getPreferenceScreen();
-			if (client.isValidToken()) {
-				Preference prefOAuth = new Preference(ctx);
-				prefOAuth.setTitle(R.string.osm_authorization_success);
-				prefOAuth.setSummary(R.string.osm_authorization_success);
-				prefOAuth.setKey(OSM_OAUTH_SUCCESS);
-
-				Preference prefClearToken = new Preference(ctx);
-				prefClearToken.setTitle(R.string.shared_string_logoff);
-				prefClearToken.setSummary(R.string.clear_osm_token);
-				prefClearToken.setKey(OSM_OAUTH_CLEAR);
-
-				screen.addPreference(prefOAuth);
-				screen.addPreference(prefClearToken);
-			}
-//				Preference prefOAuth = new Preference(ctx);
-//				prefOAuth.setTitle(R.string.perform_oauth_authorization);
-//				prefOAuth.setSummary(R.string.perform_oauth_authorization_description);
-//				prefOAuth.setKey(OSM_OAUTH_LOGIN);
-//				screen.addPreference(prefOAuth);
-//			}
-		}
-	}
-
 	@Override
 	public boolean onPreferenceClick(Preference preference) {
 		String prefId = preference.getKey();
@@ -196,12 +171,16 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 				return true;
 			}
 		} else if (OSM_LOGIN_EXIT.equals(prefId)) {
-			settings.USER_ACCESS_TOKEN.set("");
-			settings.USER_ACCESS_TOKEN_SECRET.set("");
+			if (client.isValidToken()) {
+				settings.USER_ACCESS_TOKEN.set("");
+				settings.USER_ACCESS_TOKEN_SECRET.set("");
 
-			client.resetToken();
-			client = new OsmOAuthAuthorizationAdapter(app);
-
+				client.resetToken();
+				client = new OsmOAuthAuthorizationAdapter(app);
+			} else {
+				settings.USER_NAME.set("");
+				settings.USER_PASSWORD.set("");
+			}
 			app.showShortToastMessage(R.string.osm_edit_logout_success);
 			updateAllSettings();
 			return true;
@@ -228,15 +207,19 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 
 	@Override
 	public void onPreferenceChanged(String prefId) {
-		if (OSM_LOGIN_DATA.equals(prefId)) {
-			Preference nameAndPasswordPref = findPreference(OSM_LOGIN_DATA);
-			nameAndPasswordPref.setSummary(settings.USER_NAME.get());
-		}
+		updateAllSettings();
 	}
 
 	public void authorize(String oauthVerifier) {
-		if (client != null) {
-			client.authorize(oauthVerifier);
+		FragmentManager fragmentManager = getMapActivity().getSupportFragmentManager();
+		LoginBottomSheetFragment fragment = (LoginBottomSheetFragment) fragmentManager.findFragmentByTag(LoginBottomSheetFragment.TAG);
+		if (fragment != null) {
+			OsmOAuthAuthorizationAdapter authorizationAdapter = fragment.getClient();
+			if (authorizationAdapter != null) {
+				authorizationAdapter.authorize(oauthVerifier);
+			}
+			fragment.dismiss();
+			client = new OsmOAuthAuthorizationAdapter(app);
 		}
 		updateAllSettings();
 	}

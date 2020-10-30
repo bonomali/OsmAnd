@@ -9,7 +9,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import net.osmand.plus.OsmandApplication;
 import net.osmand.plus.R;
 import net.osmand.plus.UiUtilities.DialogButtonType;
 import net.osmand.plus.base.MenuBottomSheetDialogFragment;
@@ -76,9 +75,13 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
         ApplicationMode appMode = getSelectedAppMode();
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
-            OsmLoginDataBottomSheet.showInstance(fragmentManager, OSM_LOGIN_DATA, this, false, appMode);
+            OsmLoginDataBottomSheet.showInstance(fragmentManager, OSM_LOGIN_DATA, getTargetFragment(), false, appMode);
         }
         dismiss();
+    }
+
+    public OsmOAuthAuthorizationAdapter getClient() {
+        return client;
     }
 
     @Override
@@ -86,8 +89,7 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
         View view = getView();
         client = new OsmOAuthAuthorizationAdapter(getMyApplication());
         if (view != null) {
-            ViewGroup appBarLayout = view.findViewById(R.id.appbar);
-            client.startOAuth(appBarLayout);
+            client.startOAuth((ViewGroup) view);
         }
         dismiss();
     }

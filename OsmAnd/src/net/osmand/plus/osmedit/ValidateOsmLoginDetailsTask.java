@@ -26,6 +26,8 @@ public class ValidateOsmLoginDetailsTask extends AsyncTask<Void, Void, OsmBugRes
 	@Override
 	protected void onPostExecute(OsmBugResult osmBugResult) {
 		if (osmBugResult.warning != null) {
+			app.getSettings().USER_NAME.set("");
+			app.getSettings().USER_PASSWORD.set("");
 			app.showToastMessage(osmBugResult.warning);
 		} else {
 			app.showToastMessage(R.string.osm_authorization_success);
