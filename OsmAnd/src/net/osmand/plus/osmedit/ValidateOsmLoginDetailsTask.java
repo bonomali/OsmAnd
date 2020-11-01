@@ -7,12 +7,16 @@ import net.osmand.plus.OsmandPlugin;
 import net.osmand.plus.R;
 import net.osmand.plus.osmedit.OsmBugsUtil.OsmBugResult;
 
+import java.lang.ref.WeakReference;
+
 public class ValidateOsmLoginDetailsTask extends AsyncTask<Void, Void, OsmBugResult> {
 
 	private OsmandApplication app;
+	private final WeakReference<OsmEditingFragment> fragmentRef;
 
-	public ValidateOsmLoginDetailsTask(OsmandApplication app) {
+	public ValidateOsmLoginDetailsTask(OsmandApplication app, OsmEditingFragment targetfragment) {
 		this.app = app;
+		this.fragmentRef = new WeakReference<>(targetfragment);
 	}
 
 	@Override
@@ -31,6 +35,10 @@ public class ValidateOsmLoginDetailsTask extends AsyncTask<Void, Void, OsmBugRes
 			app.showToastMessage(osmBugResult.warning);
 		} else {
 			app.showToastMessage(R.string.osm_authorization_success);
+		}
+		OsmEditingFragment targetfragment = fragmentRef.get();
+		if (targetfragment != null) {
+			targetfragment.updateAllSettings();
 		}
 	}
 }

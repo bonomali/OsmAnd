@@ -306,7 +306,7 @@ public abstract class MenuBottomSheetDialogFragment extends BottomSheetDialogFra
 		}
 	}
 
-	boolean useVerticalButtons() {
+	protected boolean useVerticalButtons() {
 		Activity activity = requireActivity();
 		int rightBottomButtonTextId = getRightBottomButtonTextId();
 		if (getDismissButtonTextId() != DEFAULT_VALUE && rightBottomButtonTextId != DEFAULT_VALUE) {
@@ -339,7 +339,7 @@ public abstract class MenuBottomSheetDialogFragment extends BottomSheetDialogFra
 		}
 	}
 
-	private void setupDismissButton() {
+	protected void setupDismissButton() {
 		dismissButton = buttonsContainer.findViewById(R.id.dismiss_button);
 		int buttonTextId = getDismissButtonTextId();
 		if (buttonTextId != DEFAULT_VALUE) {
@@ -355,7 +355,7 @@ public abstract class MenuBottomSheetDialogFragment extends BottomSheetDialogFra
 		AndroidUiHelper.updateVisibility(dismissButton, buttonTextId != DEFAULT_VALUE);
 	}
 
-	private void setupRightButton() {
+	protected void setupRightButton() {
 		rightButton = buttonsContainer.findViewById(R.id.right_bottom_button);
 		int buttonTextId = getRightBottomButtonTextId();
 		if (buttonTextId != DEFAULT_VALUE) {
@@ -377,7 +377,7 @@ public abstract class MenuBottomSheetDialogFragment extends BottomSheetDialogFra
 		return getResources().getDimensionPixelSize(R.dimen.content_padding);
 	}
 
-	private void setupThirdButton() {
+	protected void setupThirdButton() {
 		thirdButton = buttonsContainer.findViewById(R.id.third_button);
 		int buttonTextId = getThirdBottomButtonTextId();
 		if (buttonTextId != DEFAULT_VALUE) {

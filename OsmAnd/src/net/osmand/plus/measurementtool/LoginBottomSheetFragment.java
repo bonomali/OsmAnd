@@ -1,19 +1,28 @@
 package net.osmand.plus.measurementtool;
 
+import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import net.osmand.AndroidUtils;
 import net.osmand.plus.R;
+import net.osmand.plus.UiUtilities;
 import net.osmand.plus.UiUtilities.DialogButtonType;
 import net.osmand.plus.base.MenuBottomSheetDialogFragment;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.DividerSpaceItem;
 import net.osmand.plus.base.bottomsheetmenu.simpleitems.ShortDescriptionItem;
+import net.osmand.plus.helpers.AndroidUiHelper;
 import net.osmand.plus.osmedit.oauth.OsmOAuthAuthorizationAdapter;
 import net.osmand.plus.settings.backend.ApplicationMode;
 import net.osmand.plus.settings.bottomsheets.OsmLoginDataBottomSheet;
@@ -23,6 +32,8 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
     private ApplicationMode appMode;
     private OsmOAuthAuthorizationAdapter client;
     private static final String OSM_LOGIN_DATA = "osm_login_data";
+    private LinearLayout buttonsContainer;
+    private static final int DEFAULT_VALUE = -1;
 
     public static final String TAG = ExitBottomSheetDialogFragment.class.getSimpleName();
 
@@ -36,7 +47,7 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
                 .create());
 
         items.add(new DividerSpaceItem(getContext(),
-                getResources().getDimensionPixelSize(R.dimen.bottom_sheet_exit_button_margin)));
+                getResources().getDimensionPixelSize(R.dimen.bottom_sheet_content_margin)));
 
     }
     
@@ -49,6 +60,22 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
     @Override
     protected int getRightBottomButtonTextId() {
         return R.string.use_login_password;
+    }
+
+    @Override
+    protected void setupThirdButton() {
+        super.setupThirdButton();
+        TextView textViewIcon = thirdButton.findViewById(R.id.button_text);
+        Drawable drawable = getResources().getDrawable(R.drawable.ic_action_openstreetmap_logo);
+        drawable = DrawableCompat.wrap(drawable);
+        DrawableCompat.setTint(drawable, getResources().getColor(R.color.popup_text_color));
+        AndroidUtils.setCompoundDrawablesWithIntrinsicBounds(
+                textViewIcon,
+                drawable,
+                null,
+                null,
+                null);
+        textViewIcon.setCompoundDrawablePadding(AndroidUtils.dpToPx(getActivity(), 8f));
     }
 
     @Override
@@ -91,7 +118,6 @@ public class LoginBottomSheetFragment extends MenuBottomSheetDialogFragment {
         if (view != null) {
             client.startOAuth((ViewGroup) view);
         }
-        dismiss();
     }
 
     @Override

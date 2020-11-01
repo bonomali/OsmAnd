@@ -45,6 +45,7 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 	private static final String OSM_LOGIN_EXIT = "osm_login_exit";
 	private static final String OSM_OAUTH_CLEAR = "osm_oauth_clear";
 	private static final String OSM_OAUTH_LOGIN = "osm_oauth_login";
+	private static final String OSM_OAUTH_SUCCESS = "osm_oauth_success";
 
 	private OsmOAuthAuthorizationAdapter client;
 
@@ -87,7 +88,7 @@ public class OsmEditingFragment extends BaseSettingsFragment implements OnPrefer
 
 	private void setupNameAndPasswordPref() {
 		Preference nameAndPasswordPref = findPreference(OSM_LOGIN_DATA);
-		nameAndPasswordPref.setTitle(R.string.sing_in_with_open_street_map);
+		nameAndPasswordPref.setTitle(R.string.login_open_street_map);
 		nameAndPasswordPref.setIcon(getContentIcon(R.drawable.ic_action_user_account));
 
 		boolean validToken = client.isValidToken();
